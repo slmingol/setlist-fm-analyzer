@@ -33,6 +33,10 @@ app.use(express.static(join(__dir, '..', 'public')));
 
 // --- API routes ---
 
+app.get('/api/version', (_req, res) => {
+  res.json({ version: process.env.APP_VERSION || 'dev' });
+});
+
 app.get('/api/status', (_req, res) => {
   const last = db.prepare(
     `SELECT * FROM sync_log WHERE finished_at IS NOT NULL ORDER BY id DESC LIMIT 1`
