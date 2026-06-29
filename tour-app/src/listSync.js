@@ -14,27 +14,58 @@ function norm(str) {
   return str.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
 }
 
-// Extract performer inductees from RRHOF wikitext.
-// Rows look like:  | [[Name]] || ... || Performer || year  (order varies by section)
-// or:              | [[Name|Display]] || Performer
+// Parse RRHOF performer inductees from Wikipedia wikitext.
+// The Performers table uses {{sortname|First|Last}} for most entries and [[Name]] for a few.
+// The Name cell immediately follows the Image cell (or a no-image comment) in each row.
+// Scanning line-by-line and tracking prevWasImageOrComment is the only reliable way to
+// isolate the Name cell from inducted-members and presenter cells that also contain [[links]].
 function parseRRHOF(wikitext) {
+  const start = wikitext.indexOf('=== Performers ===');
+  if (start === -1) return [];
+  const nextSection = wikitext.indexOf('\n===', start + 20);
+  const section = nextSection !== -1 ? wikitext.slice(start, nextSection) : wikitext.slice(start);
+
   const results = [];
-  // Split into table rows
-  const rows = wikitext.split(/\n\|-/);
-  for (const row of rows) {
-    // Must contain a wikilink
-    const linkMatch = row.match(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/);
-    if (!linkMatch) continue;
-    // Must be a Performer or Musical Excellence inductee
-    if (!/Performer|Musical Excellence/i.test(row)) continue;
-    // Prefer display name (after |), fall back to article name
-    const name = (linkMatch[2] || linkMatch[1]).trim();
-    // Extract year — look for a 4-digit year in the row
-    const yearMatch = row.match(/\b(19[5-9]\d|20\d{2})\b/);
-    const year = yearMatch ? Number(yearMatch[1]) : null;
-    results.push({ name, year });
+  const seen = new Set();
+  let currentYear = null;
+  let prevWasImageOrComment = false;
+
+  for (const raw of section.split('\n')) {
+    const line = raw.replace(/^\|+\s*/, '').trimStart();
+
+    // Year cell: bare year or rowspan="N" | year
+    const yearMatch = line.match(/^(?:rowspan="\d+"\s*\|\s*)?(19[5-9]\d|20\d{2})\s*(?:<|$)/);
+    if (yearMatch) {
+      currentYear = Number(yearMatch[1]);
+      prevWasImageOrComment = false;
+      continue;
+    }
+
+    // Image cell or no-image placeholder comment
+    if (/^\[\[File:/i.test(line) || /^<!--/.test(line)) {
+      prevWasImageOrComment = true;
+      continue;
+    }
+
+    if (prevWasImageOrComment) {
+      let name = null;
+      const sn = line.match(/^\{\{sortname\|([^|}\n]+)\|([^|}\n]+)/);
+      if (sn) {
+        name = `${sn[1].trim()} ${sn[2].trim()}`;
+      } else {
+        const lk = line.match(/^\[\[(?!File:)([^\]|#]+)(?:\|([^\]]+))?\]\]/);
+        if (lk) name = (lk[2] || lk[1]).trim();
+      }
+      if (name && !seen.has(name)) {
+        seen.add(name);
+        results.push({ name, year: currentYear });
+      }
+    }
+
+    prevWasImageOrComment = false;
   }
-  return results;
+
+  return results.sort((a, b) => (a.year ?? 9999) - (b.year ?? 9999));
 }
 
 let running = false;

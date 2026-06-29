@@ -107,6 +107,39 @@ section{padding:2rem 0}
 section>h2{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:1rem}
 footer{padding:1.5rem 0;color:var(--muted);font-size:.78rem;border-top:1px solid var(--border)}
 .empty{text-align:center;padding:4rem;color:var(--muted)}
+
+/* Settings drawer */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100}
+.drawer-overlay.open{display:block}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:360px;background:var(--surface);
+  border-left:1px solid var(--border);padding:1.5rem;overflow-y:auto;z-index:101;
+  transform:translateX(100%);transition:transform .2s}
+.drawer.open{transform:none}
+.drawer h2{font-size:1rem;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center}
+.drawer-close{background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:.2rem}
+.drawer-close:hover{color:var(--text)}
+.drawer section{margin-bottom:1.5rem;padding:0}
+.drawer h3{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.6rem}
+.drawer p{font-size:.78rem;color:var(--muted);margin-bottom:.5rem;line-height:1.5}
+.bl-empty{color:var(--muted);font-size:.78rem;padding:.5rem 0}
+.btn-settings-cov{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:.25rem .75rem;font-size:.82rem;cursor:pointer;margin-left:auto}
+.btn-settings-cov:hover{border-color:var(--accent);color:var(--text)}
+.sugg-badge{display:inline-block;background:var(--accent);color:#fff;border-radius:10px;
+  font-size:.65rem;font-weight:700;padding:.1rem .45rem;margin-left:.4rem;vertical-align:middle}
+.sugg-list{margin-top:.6rem;display:flex;flex-direction:column;gap:.6rem}
+.sugg-item{background:#1c1c38;border:1px solid var(--border);border-radius:6px;padding:.6rem .8rem;font-size:.78rem}
+.sugg-name{font-weight:600;margin-bottom:.2rem}
+.sugg-detail{color:var(--muted);margin-bottom:.4rem;font-size:.72rem}
+.sugg-status{display:inline-block;margin-bottom:.4rem}
+.sugg-actions{display:flex;gap:.4rem}
+.btn-accept{background:var(--accent);color:#fff;border:none;border-radius:4px;padding:.2rem .6rem;font-size:.72rem;cursor:pointer}
+.btn-accept:hover{opacity:.85}
+.btn-dismiss-s{background:none;border:1px solid var(--border);color:var(--muted);border-radius:4px;padding:.2rem .6rem;font-size:.72rem;cursor:pointer}
+.btn-dismiss-s:hover{color:var(--text)}
+.status-pill{display:inline-block;padding:.1rem .4rem;border-radius:3px;font-size:.68rem;font-weight:600}
+.status-active{background:rgba(74,222,128,.15);color:#4ade80}
+.status-hiatus{background:rgba(251,191,36,.15);color:#fbbf24}
+.status-sync-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
 </style>
 </head>
 <body>
@@ -116,8 +149,32 @@ footer{padding:1.5rem 0;color:var(--muted);font-size:.78rem;border-top:1px solid
     <span class="nav-brand">setlist.fm</span>
     <a href="/coverage.html" class="nav-link active">Coverage</a>
     <a href="/" class="nav-link">Tour Planner</a>
+    <button class="btn-settings-cov" id="settingsBtn" onclick="openSettings()">⚙ Settings<span class="sugg-badge" id="suggBadge" style="display:none"></span></button>
   </div>
 </nav>
+
+<div class="drawer-overlay" id="overlay" onclick="closeSettings()"></div>
+<div class="drawer" id="drawer">
+  <h2>Settings <button class="drawer-close" onclick="closeSettings()">✕</button></h2>
+
+  <section>
+    <h3>Status Suggestions</h3>
+    <div class="status-sync-row">
+      <p style="margin:0">Touring status conflicts detected by weekly Ticketmaster check.</p>
+      <button class="btn-dismiss-s" id="statusSyncBtn" onclick="triggerStatusSync()" style="white-space:nowrap">Run Check</button>
+    </div>
+    <div class="sugg-list" id="suggList"></div>
+  </section>
+
+  <section>
+    <h3>Missing Inductees</h3>
+    <div class="status-sync-row">
+      <p style="margin:0">RRHOF inductees not in top_artists.json. Dismiss or add manually.</p>
+      <button class="btn-dismiss-s" id="listSyncBtn" onclick="triggerListSync()" style="white-space:nowrap">Run Check</button>
+    </div>
+    <div class="sugg-list" id="listSuggList"></div>
+  </section>
+</div>
 
 <div class="hero">
   <div class="container">
@@ -491,7 +548,108 @@ function resetGenres() {
   dt.draw();
 }
 
+// --- Settings drawer (suggestions) ---
+let suggestions = [], listSuggestions = [];
+
+async function loadSuggestions() {
+  [suggestions, listSuggestions] = await Promise.all([
+    fetch('/api/suggestions').then(r => r.json()),
+    fetch('/api/list-suggestions').then(r => r.json()),
+  ]);
+  renderSuggestions();
+  renderListSuggestions();
+}
+
+function updateBadge() {
+  const total = suggestions.length + listSuggestions.length;
+  const badge = document.getElementById('suggBadge');
+  badge.textContent = total;
+  badge.style.display = total ? '' : 'none';
+}
+
+function renderSuggestions() {
+  const pill = s => `<span class="status-pill status-${s}">${s}</span>`;
+  document.getElementById('suggList').innerHTML = suggestions.length
+    ? suggestions.map(s => `
+        <div class="sugg-item" id="sugg-${s.artist_rank}">
+          <div class="sugg-name">#${s.artist_rank} ${s.artist_name}</div>
+          <div class="sugg-detail">${s.reason}${s.consecutive_hits > 1 ? ` &middot; seen ${s.consecutive_hits}x` : ''}</div>
+          <div class="sugg-status">${pill(s.current_status)} &rarr; ${pill(s.suggested_status)}</div>
+          <div class="sugg-actions">
+            <button class="btn-accept" onclick="acceptSuggestion(${s.artist_rank},'${s.suggested_status}')">Accept</button>
+            <button class="btn-dismiss-s" onclick="dismissSuggestion(${s.artist_rank})">Dismiss</button>
+          </div>
+        </div>`).join('')
+    : '<p class="bl-empty">No conflicts found. Run Check to scan now.</p>';
+  updateBadge();
+}
+
+function renderListSuggestions() {
+  document.getElementById('listSuggList').innerHTML = listSuggestions.length
+    ? listSuggestions.map(s => `
+        <div class="sugg-item" id="lsugg-${s.id}">
+          <div class="sugg-name">${s.name}${s.year ? ` <span style="color:var(--muted);font-weight:400">(${s.year})</span>` : ''}</div>
+          <div class="sugg-detail">RRHOF Performer — not in top_artists.json</div>
+          <div class="sugg-actions">
+            <button class="btn-dismiss-s" onclick="dismissListSuggestion(${s.id})">Dismiss</button>
+          </div>
+        </div>`).join('')
+    : '<p class="bl-empty">No gaps found. Run Check to scan now.</p>';
+  updateBadge();
+}
+
+async function acceptSuggestion(rank, newStatus) {
+  await fetch(`/api/suggestions/${rank}/accept`, { method: 'POST' });
+  suggestions = suggestions.filter(s => s.artist_rank !== rank);
+  renderSuggestions();
+}
+
+async function dismissSuggestion(rank) {
+  await fetch(`/api/suggestions/${rank}/dismiss`, { method: 'POST' });
+  suggestions = suggestions.filter(s => s.artist_rank !== rank);
+  renderSuggestions();
+}
+
+async function dismissListSuggestion(id) {
+  await fetch(`/api/list-suggestions/${id}/dismiss`, { method: 'POST' });
+  listSuggestions = listSuggestions.filter(s => s.id !== id);
+  renderListSuggestions();
+}
+
+async function triggerStatusSync() {
+  const btn = document.getElementById('statusSyncBtn');
+  btn.disabled = true; btn.textContent = 'Running…';
+  await fetch('/api/status-sync', { method: 'POST' });
+  setTimeout(async () => {
+    suggestions = await fetch('/api/suggestions').then(r => r.json());
+    renderSuggestions();
+    btn.disabled = false; btn.textContent = 'Run Check';
+  }, 5000);
+}
+
+async function triggerListSync() {
+  const btn = document.getElementById('listSyncBtn');
+  btn.disabled = true; btn.textContent = 'Running…';
+  await fetch('/api/list-sync', { method: 'POST' });
+  setTimeout(async () => {
+    listSuggestions = await fetch('/api/list-suggestions').then(r => r.json());
+    renderListSuggestions();
+    btn.disabled = false; btn.textContent = 'Run Check';
+  }, 10000);
+}
+
+function openSettings() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
 init();
+loadSuggestions();
 </script>
 </body>
 </html>
