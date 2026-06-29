@@ -154,6 +154,21 @@ Chart.defaults.borderColor = '#2a2a50';
 
 let dt, excludedGenres = new Set(), seenFilter = 'all', statusFilter = 'all';
 
+function saveGenrePrefs() {
+  localStorage.setItem('coverage_excluded_genres', JSON.stringify([...excludedGenres]));
+}
+
+function loadGenrePrefs() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('coverage_excluded_genres') ?? '[]');
+    excludedGenres = new Set(saved);
+    document.querySelectorAll('.genre-toggle').forEach(b => {
+      if (excludedGenres.has(b.dataset.genre)) b.classList.add('excluded');
+    });
+    if (excludedGenres.size) dt.draw();
+  } catch (_) {}
+}
+
 async function init() {
   let data;
   try {
@@ -239,6 +254,8 @@ async function init() {
     language: { search: '', searchPlaceholder: 'Search artists…' },
     columnDefs: [{ visible: false, targets: [6,7,8,9] }],
   });
+
+  loadGenrePrefs();
 
   document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -434,17 +451,20 @@ function applyStatusFilter(btn, f) {
 function toggleGenre(btn, genre) {
   if (excludedGenres.has(genre)) { excludedGenres.delete(genre); btn.classList.remove('excluded'); }
   else                           { excludedGenres.add(genre);    btn.classList.add('excluded'); }
+  saveGenrePrefs();
   dt.draw();
 }
 
 function clearGenres() {
   document.querySelectorAll('.genre-toggle').forEach(b => { excludedGenres.add(b.dataset.genre); b.classList.add('excluded'); });
+  saveGenrePrefs();
   dt.draw();
 }
 
 function resetGenres() {
   excludedGenres.clear();
   document.querySelectorAll('.genre-toggle').forEach(b => b.classList.remove('excluded'));
+  saveGenrePrefs();
   dt.draw();
 }
 
