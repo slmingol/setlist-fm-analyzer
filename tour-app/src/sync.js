@@ -53,6 +53,7 @@ export async function runSync({ setlistKey, setlistUser, tmKey, log = console.lo
       if ((i + 1) % 20 === 0) log(`  [${i + 1}/${unseen.length}]`);
 
       const rawEvents = await fetchEvents(artist.name, tmKey);
+      if (i <= 3) log(`  debug [${artist.name}]: ${rawEvents.length} raw events from TM`);
       const upcoming  = rawEvents
         .map(parseEvent)
         .filter(e => e.date >= today);

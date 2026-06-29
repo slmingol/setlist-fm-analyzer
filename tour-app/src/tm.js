@@ -15,10 +15,15 @@ export async function fetchEvents(artistName, apiKey, pageSize = 10) {
     try {
       const res = await fetch(`${BASE}/events.json?${params}`);
       if (res.status === 429) { await sleep(2 ** attempt * 1000); continue; }
-      if (!res.ok) return [];
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        console.error(`TM API ${res.status} for "${artistName}": ${body.slice(0, 200)}`);
+        return [];
+      }
       const data = await res.json();
       return data?._embedded?.events ?? [];
-    } catch {
+    } catch (err) {
+      console.error(`TM fetch error for "${artistName}": ${err.message}`);
       await sleep(2 ** attempt * 1000);
     }
   }
