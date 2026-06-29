@@ -18,7 +18,7 @@ export async function runSync({ setlistKey, setlistUser, tmKey, log = console.lo
   running = true;
 
   const syncRow = db.prepare(
-    'INSERT INTO sync_log (started_at) VALUES (datetime("now"))'
+    `INSERT INTO sync_log (started_at) VALUES (datetime('now'))`
   ).run();
   const syncId = syncRow.lastInsertRowid;
 
