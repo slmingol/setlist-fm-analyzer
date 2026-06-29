@@ -24,6 +24,10 @@ A self-hosted web app that tracks your concert coverage against a curated list o
 - Suggestions appear in the Settings drawer with an accept/dismiss button
 - Accepting a suggestion updates `top_artists.json` directly on disk -- no manual editing required
 
+**Missing inductee suggestions**
+- On the 1st of each month the app fetches the RRHOF performer inductee list from Wikipedia and flags anyone not in `top_artists.json`
+- Surfaces in the Settings drawer so you can review and add them manually or dismiss
+
 ## Requirements
 
 - Docker (or Docker Compose)
@@ -32,31 +36,32 @@ A self-hosted web app that tracks your concert coverage against a curated list o
 
 ## Setup
 
-```bash
-cp .env.example .env
-```
-
-Edit `.env`:
-
-```
-SETLISTFM_API_KEY=your_setlistfm_api_key
-SETLISTFM_USERNAME=your_setlistfm_username
-TICKETMASTER_API_KEY=your_ticketmaster_consumer_key
-```
-
-Then start the app:
+### Local dev (builds image from source)
 
 ```bash
-# local dev (builds image from source)
+cp .env.example .env   # fill in your API keys
 docker compose up -d
-
-# production (pulls pre-built image from GHCR)
-docker compose -f docker-compose.prod.yml up -d
-
 # open http://localhost:3234
 ```
 
-On first start, the app syncs immediately (fetches your setlist.fm history and queries Ticketmaster). Subsequent syncs run every Monday at noon UTC.
+### Production (pull pre-built image from GHCR)
+
+Copy these three files to the server:
+
+```
+docker-compose.prod.yml
+top_artists.json
+.env
+```
+
+Then:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d
+# open http://localhost:3234
+```
+
+On first start the app syncs immediately (fetches your setlist.fm history and queries Ticketmaster). Subsequent syncs run every Monday at noon UTC.
 
 ## Data
 
@@ -76,6 +81,7 @@ On first start, the app syncs immediately (fetches your setlist.fm history and q
 | `SYNC_ON_START` | `true` | Run a sync immediately on startup |
 | `CRON_SCHEDULE` | `0 12 * * 1` | When to sync (Monday noon UTC) |
 | `STATUS_SYNC_SCHEDULE` | `0 14 * * 1` | When to run the touring status check (Monday 2pm UTC) |
+| `LIST_SYNC_SCHEDULE` | `0 10 1 * *` | When to check RRHOF inductee gaps (1st of each month) |
 
 ## Artist matching
 
