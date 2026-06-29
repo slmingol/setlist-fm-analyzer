@@ -254,8 +254,9 @@ async function init() {
   });
   dtSeen.on('length.dt', savePrefs);
 
-  // Custom search for main table (seen/status/genre filters)
-  $.fn.dataTable.ext.search.push((_s, row) => {
+  // Custom search for main table only (seen/status/genre filters)
+  $.fn.dataTable.ext.search.push((settings, row) => {
+    if (settings.nTable.id !== 'artistTable') return true;
     if (seenFilter   === 'seen'      && row[6] !== '1') return false;
     if (seenFilter   === 'unseen'    && row[6] !== '0') return false;
     if (statusFilter === 'living'    && row[7] !== '0') return false;
