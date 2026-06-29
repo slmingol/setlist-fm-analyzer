@@ -19,6 +19,11 @@ A self-hosted web app that tracks your concert coverage against a curated list o
 - Newly found dates badged **NEW** for 72 hours
 - Filter and sort state persists across page loads
 
+**Touring status suggestions**
+- Every Monday the app checks all active/hiatus artists against Ticketmaster and flags conflicts: an "active" artist with no upcoming shows, or a "hiatus" artist who suddenly has dates
+- Suggestions appear in the Settings drawer with an accept/dismiss button
+- Accepting a suggestion updates `top_artists.json` directly on disk -- no manual editing required
+
 ## Requirements
 
 - Docker (or Docker Compose)
@@ -66,6 +71,7 @@ On first start, the app syncs immediately (fetches your setlist.fm history and q
 | `PORT` | `3000` | Internal container port |
 | `SYNC_ON_START` | `true` | Run a sync immediately on startup |
 | `CRON_SCHEDULE` | `0 12 * * 1` | When to sync (Monday noon UTC) |
+| `STATUS_SYNC_SCHEDULE` | `0 14 * * 1` | When to run the touring status check (Monday 2pm UTC) |
 
 ## Artist matching
 
@@ -79,9 +85,13 @@ Aliases cover common variations (e.g. `Pat Benatar & Neil Giraldo` → `Pat Bena
 
 ## Touring status values
 
+`top_artists.json` tags each artist with one of four statuses. This determines whether they show up in the Tour Planner (only `active` artists are queried against Ticketmaster) and how the Coverage dials are counted.
+
 | Status | Meaning |
 |--------|---------|
 | `active` | Currently touring |
 | `hiatus` | Living but not actively touring (health, retirement, or indefinite hiatus) |
 | `disbanded` | Group officially dissolved |
 | `deceased` | Essential member(s) died and the act no longer performs |
+
+These values were set manually when the list was built and need occasional updates as things change. The app handles this automatically -- see "Touring status suggestions" above.
