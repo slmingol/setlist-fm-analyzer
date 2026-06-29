@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { mkdirSync } from 'fs';
 import db from './db.js';
 import { runSync, isSyncing } from './sync.js';
+import { runStatusSync, isStatusSyncing, applyStatusChange } from './statusSync.js';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 mkdirSync(join(__dir, '..', 'data'), { recursive: true });
@@ -16,7 +17,8 @@ const {
   TICKETMASTER_API_KEY: TM_KEY     = '',
   PORT = '3000',
   SYNC_ON_START = 'true',
-  CRON_SCHEDULE = '0 12 * * 1',  // Monday noon UTC
+  CRON_SCHEDULE = '0 12 * * 1',         // Monday noon UTC
+  STATUS_SYNC_SCHEDULE = '0 14 * * 1',  // Monday 2pm UTC (after main sync)
 } = process.env;
 
 if (!SETLIST_KEY || !SETLIST_USER || !TM_KEY) {
@@ -108,11 +110,48 @@ app.post('/api/sync', async (_req, res) => {
   runSync({ setlistKey: SETLIST_KEY, setlistUser: SETLIST_USER, tmKey: TM_KEY });
 });
 
+// Status suggestions
+app.get('/api/suggestions', (_req, res) => {
+  const rows = db.prepare(
+    `SELECT * FROM status_suggestions WHERE dismissed = 0 ORDER BY consecutive_hits DESC, detected_at DESC`
+  ).all();
+  res.json(rows);
+});
+
+app.post('/api/suggestions/:rank/accept', (req, res) => {
+  const rank = Number(req.params.rank);
+  const row = db.prepare(`SELECT * FROM status_suggestions WHERE artist_rank = ?`).get(rank);
+  if (!row) return res.status(404).json({ error: 'Suggestion not found' });
+  try {
+    const result = applyStatusChange(rank, row.suggested_status);
+    db.prepare(`DELETE FROM status_suggestions WHERE artist_rank = ?`).run(rank);
+    res.json({ ok: true, ...result });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/suggestions/:rank/dismiss', (req, res) => {
+  db.prepare(`UPDATE status_suggestions SET dismissed = 1 WHERE artist_rank = ?`).run(Number(req.params.rank));
+  res.json({ ok: true });
+});
+
+app.post('/api/status-sync', (_req, res) => {
+  if (isStatusSyncing()) return res.status(409).json({ error: 'Status sync already running' });
+  res.json({ started: true });
+  runStatusSync({ tmKey: TM_KEY });
+});
+
 // --- Scheduler ---
 
 cron.schedule(CRON_SCHEDULE, () => {
   console.log('Cron: starting weekly sync');
   runSync({ setlistKey: SETLIST_KEY, setlistUser: SETLIST_USER, tmKey: TM_KEY });
+});
+
+cron.schedule(STATUS_SYNC_SCHEDULE, () => {
+  console.log('Cron: starting weekly status sync');
+  runStatusSync({ tmKey: TM_KEY });
 });
 
 app.listen(Number(PORT), () => {

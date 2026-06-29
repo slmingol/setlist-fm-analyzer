@@ -99,6 +99,25 @@
   .bl-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem}
   .bl-remove:hover{color:var(--red)}
   .bl-empty{color:var(--muted);font-size:.78rem;padding:.5rem 0}
+  /* Suggestions */
+  .sugg-badge{display:inline-block;background:var(--accent);color:#fff;border-radius:10px;
+    font-size:.65rem;font-weight:700;padding:.1rem .45rem;margin-left:.4rem;vertical-align:middle}
+  .sugg-list{margin-top:.6rem;display:flex;flex-direction:column;gap:.6rem}
+  .sugg-item{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.6rem .8rem;font-size:.78rem}
+  .sugg-name{font-weight:600;margin-bottom:.2rem}
+  .sugg-detail{color:var(--muted);margin-bottom:.4rem;font-size:.72rem}
+  .sugg-status{display:inline-block;margin-bottom:.4rem}
+  .sugg-actions{display:flex;gap:.4rem}
+  .btn-accept{background:var(--accent);color:#fff;border:none;border-radius:4px;
+    padding:.2rem .6rem;font-size:.72rem;cursor:pointer}
+  .btn-accept:hover{opacity:.85}
+  .btn-dismiss{background:none;border:1px solid var(--border);color:var(--muted);border-radius:4px;
+    padding:.2rem .6rem;font-size:.72rem;cursor:pointer}
+  .btn-dismiss:hover{color:var(--text)}
+  .status-pill{display:inline-block;padding:.1rem .4rem;border-radius:3px;font-size:.68rem;font-weight:600}
+  .status-active{background:rgba(74,222,128,.15);color:#4ade80}
+  .status-hiatus{background:rgba(251,191,36,.15);color:#fbbf24}
+  .status-sync-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
 </style>
 </head>
 <body>
@@ -124,7 +143,7 @@
     <span class="loc-label">Locations:</span>
     <input class="loc-box" id="locFilter" placeholder="CA, NY, WA …" title="Comma-separated state codes or country codes. Leave blank for all." oninput="savePrefs();render()">
     <button class="btn btn-accent" id="syncBtn" onclick="triggerSync()">Refresh Now</button>
-    <button class="btn btn-settings" onclick="openSettings()">⚙ Settings</button>
+    <button class="btn btn-settings" id="settingsBtn" onclick="openSettings()">⚙ Settings<span class="sugg-badge" id="suggBadge" style="display:none"></span></button>
   </div>
 
   <div class="status-bar" id="statusBar">Loading…</div>
@@ -142,6 +161,15 @@
     <input id="locSettingInput" placeholder="e.g. CA, NY, WA, OR" oninput="syncLocInputs()">
   </section>
 
+  <section id="suggSection" style="display:none">
+    <h3>Status Suggestions</h3>
+    <div class="status-sync-row">
+      <p style="margin:0">Touring status conflicts detected by weekly Ticketmaster check.</p>
+      <button class="btn-dismiss" id="statusSyncBtn" onclick="triggerStatusSync()" style="white-space:nowrap">Run Check</button>
+    </div>
+    <div class="sugg-list" id="suggList"></div>
+  </section>
+
   <section>
     <h3>Hidden Artists</h3>
     <p>Artists you've hidden will not appear in the planner. Click ✕ to restore.</p>
@@ -152,6 +180,7 @@
 <script>
 let allArtists = [];
 let blacklist = [];
+let suggestions = [];
 let status = {};
 let sortCol = 'rank', sortDir = 1;
 const NEW_HOURS = 72;
@@ -178,16 +207,19 @@ function loadPrefs() {
 
 async function load() {
   loadPrefs();
-  const [ar, sr, bl] = await Promise.all([
+  const [ar, sr, bl, sg] = await Promise.all([
     fetch('/api/artists').then(r => r.json()),
     fetch('/api/status').then(r => r.json()),
     fetch('/api/blacklist').then(r => r.json()),
+    fetch('/api/suggestions').then(r => r.json()),
   ]);
   allArtists = ar;
   status = sr;
   blacklist = bl;
+  suggestions = sg;
   renderStatus();
   renderBlacklist();
+  renderSuggestions();
   render();
 }
 
@@ -299,6 +331,60 @@ async function restoreArtist(rank) {
   // full reload to get events back
   allArtists = await fetch('/api/artists').then(r => r.json());
   render();
+}
+
+function renderSuggestions() {
+  const section = document.getElementById('suggSection');
+  const list    = document.getElementById('suggList');
+  const badge   = document.getElementById('suggBadge');
+
+  if (!suggestions.length) {
+    section.style.display = 'none';
+    badge.style.display = 'none';
+    return;
+  }
+
+  section.style.display = '';
+  badge.textContent = suggestions.length;
+  badge.style.display = '';
+
+  const pill = s => `<span class="status-pill status-${s}">${s}</span>`;
+
+  list.innerHTML = suggestions.map(s => `
+    <div class="sugg-item" id="sugg-${s.artist_rank}">
+      <div class="sugg-name">#${s.artist_rank} ${s.artist_name}</div>
+      <div class="sugg-detail">${s.reason}${s.consecutive_hits > 1 ? ` &middot; seen ${s.consecutive_hits}x` : ''}</div>
+      <div class="sugg-status">${pill(s.current_status)} &rarr; ${pill(s.suggested_status)}</div>
+      <div class="sugg-actions">
+        <button class="btn-accept" onclick="acceptSuggestion(${s.artist_rank}, '${s.suggested_status}')">Accept</button>
+        <button class="btn-dismiss" onclick="dismissSuggestion(${s.artist_rank})">Dismiss</button>
+      </div>
+    </div>`).join('');
+}
+
+async function acceptSuggestion(rank, newStatus) {
+  await fetch(`/api/suggestions/${rank}/accept`, { method: 'POST' });
+  suggestions = suggestions.filter(s => s.artist_rank !== rank);
+  renderSuggestions();
+}
+
+async function dismissSuggestion(rank) {
+  await fetch(`/api/suggestions/${rank}/dismiss`, { method: 'POST' });
+  suggestions = suggestions.filter(s => s.artist_rank !== rank);
+  renderSuggestions();
+}
+
+async function triggerStatusSync() {
+  const btn = document.getElementById('statusSyncBtn');
+  btn.disabled = true;
+  btn.textContent = 'Running…';
+  await fetch('/api/status-sync', { method: 'POST' });
+  setTimeout(async () => {
+    suggestions = await fetch('/api/suggestions').then(r => r.json());
+    renderSuggestions();
+    btn.disabled = false;
+    btn.textContent = 'Run Check';
+  }, 5000);
 }
 
 function renderBlacklist() {

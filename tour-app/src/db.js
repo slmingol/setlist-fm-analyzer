@@ -51,6 +51,17 @@ db.exec(`
     value      TEXT NOT NULL,
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS status_suggestions (
+    artist_rank      INTEGER PRIMARY KEY,
+    artist_name      TEXT NOT NULL,
+    current_status   TEXT NOT NULL,
+    suggested_status TEXT NOT NULL,
+    reason           TEXT NOT NULL,
+    consecutive_hits INTEGER NOT NULL DEFAULT 1,
+    detected_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    dismissed        INTEGER NOT NULL DEFAULT 0
+  );
 `);
 
 export default db;
