@@ -13,6 +13,8 @@ let running = false;
 
 export function isSyncing() { return running; }
 
+const primaryGenre = a => (Array.isArray(a.genre) ? a.genre[0] : a.genre) ?? 'Other';
+
 export async function runSync({ setlistKey, setlistUser, tmKey, log = console.log } = {}) {
   if (running) { log('Sync already in progress, skipping'); return; }
   running = true;
@@ -36,26 +38,39 @@ export async function runSync({ setlistKey, setlistUser, tmKey, log = console.lo
     // 2. Fetch setlist.fm history
     log('Fetching setlist.fm history…');
     const shows = await fetchAttended(setlistUser, setlistKey);
-    const seen  = buildSeenSet(shows);
-    log(`  ${shows.length} shows, ${seen.size} unique artists seen`);
+    log(`  ${shows.length} shows fetched`);
 
-    // Resolve seen artist names → ranks via alias lookup.
-    // Also split "X with Y" names so both artists get credit.
-    const seenRanks = new Set();
-    const rawNames = shows.map(s => s?.artist?.name).filter(Boolean);
-    for (const raw of rawNames) {
+    // Build seenRanks and per-artist show counts from raw show data.
+    // Splits "X with Y" names so both artists get credit.
+    const seenRanks  = new Set();
+    const seenCounts = new Map(); // rank → show count
+
+    for (const show of shows) {
+      const raw = show?.artist?.name;
+      if (!raw) continue;
+      const ranksThisShow = new Set();
+
+      const r = aliasToRank.get(normalize(raw));
+      if (r) ranksThisShow.add(r);
+
       const parts = raw.split(/\s+with\s+/i);
-      for (const part of parts) {
-        const rank = aliasToRank.get(normalize(part));
-        if (rank) seenRanks.add(rank);
+      if (parts.length > 1) {
+        for (const part of parts) {
+          const pr = aliasToRank.get(normalize(part));
+          if (pr) ranksThisShow.add(pr);
+        }
+      }
+
+      for (const rank of ranksThisShow) {
+        seenRanks.add(rank);
+        seenCounts.set(rank, (seenCounts.get(rank) ?? 0) + 1);
       }
     }
-    for (const normName of seen) {
-      const rank = aliasToRank.get(normName);
-      if (rank) seenRanks.add(rank);
-    }
 
-    // 3. Filter to unseen active artists (by rank, so aliases match)
+    const uniqueArtists = new Set(shows.map(s => s?.artist?.name).filter(Boolean)).size;
+    log(`  ${seenRanks.size} top-500 artists seen, ${uniqueArtists} unique artists total`);
+
+    // 3. Filter to unseen active artists
     const unseen = active.filter(a => !seenRanks.has(a.rank));
     log(`  ${unseen.length} unseen active artists to check`);
 
@@ -75,10 +90,7 @@ export async function runSync({ setlistKey, setlistUser, tmKey, log = console.lo
       if ((i + 1) % 20 === 0) log(`  [${i + 1}/${unseen.length}]`);
 
       const rawEvents = await fetchEvents(artist.name, tmKey);
-      if (i <= 3) log(`  debug [${artist.name}]: ${rawEvents.length} raw events from TM`);
-      const upcoming  = rawEvents
-        .map(parseEvent)
-        .filter(e => e.date >= today);
+      const upcoming  = rawEvents.map(parseEvent).filter(e => e.date >= today);
 
       eventsFound += upcoming.length;
 
@@ -87,15 +99,73 @@ export async function runSync({ setlistKey, setlistUser, tmKey, log = console.lo
         if (result.changes) newEvents++;
       }
 
-      // Prune stale events (past dates) for this artist
-      db.prepare(`DELETE FROM events WHERE artist_rank = ? AND date < ?`)
-        .run(artist.rank, today);
-
+      db.prepare(`DELETE FROM events WHERE artist_rank = ? AND date < ?`).run(artist.rank, today);
       await new Promise(r => setTimeout(r, 200));
     }
 
-    // Also prune any globally stale events
     db.prepare(`DELETE FROM events WHERE date < ?`).run(today);
+
+    // 5. Compute and cache coverage stats for the analyzer view
+    const living   = topArtists.filter(a => !a.deceased);
+    const deceased = topArtists.filter(a => a.deceased);
+    const reachable = topArtists.filter(a => ['active', 'hiatus'].includes(a.touring_status));
+
+    const genreMap = {}, eraMap = {};
+    for (const a of topArtists) {
+      const g = primaryGenre(a), e = a.era ?? 'Unknown';
+      if (!genreMap[g]) genreMap[g] = { genre: g, total: 0, seen: 0 };
+      if (!eraMap[e])   eraMap[e]   = { era:   e, total: 0, seen: 0 };
+      genreMap[g].total++;
+      eraMap[e].total++;
+      if (seenRanks.has(a.rank)) { genreMap[g].seen++; eraMap[e].seen++; }
+    }
+
+    const artistsList = topArtists.map(a => ({
+      rank:           a.rank,
+      name:           a.name,
+      genre:          primaryGenre(a),
+      era:            a.era ?? '',
+      sources:        (a.sources ?? []).join(', '),
+      touring_status: a.touring_status ?? 'active',
+      deceased:       a.deceased ?? false,
+      seen:           seenRanks.has(a.rank),
+      shows_count:    seenCounts.get(a.rank) ?? 0,
+    }));
+
+    const coverageData = {
+      updated_at: new Date().toISOString(),
+      stats: {
+        total:           topArtists.length,
+        seen_count:      seenRanks.size,
+        total_shows:     shows.length,
+        unique_artists:  uniqueArtists,
+        living_count:    living.length,
+        living_seen:     living.filter(a => seenRanks.has(a.rank)).length,
+        deceased_count:  deceased.length,
+        deceased_seen:   deceased.filter(a => seenRanks.has(a.rank)).length,
+        active_count:    active.length,
+        active_seen:     active.filter(a => seenRanks.has(a.rank)).length,
+        hiatus_count:    topArtists.filter(a => a.touring_status === 'hiatus').length,
+        disbanded_count: topArtists.filter(a => a.touring_status === 'disbanded').length,
+        reachable_count: reachable.length,
+        reachable_seen:  reachable.filter(a => seenRanks.has(a.rank)).length,
+      },
+      by_genre: Object.values(genreMap).sort((a, b) => b.total - a.total),
+      by_era:   Object.values(eraMap).sort((a, b) => {
+        if (a.era === 'Unknown') return 1;
+        if (b.era === 'Unknown') return -1;
+        return a.era.localeCompare(b.era);
+      }),
+      artists: artistsList,
+      top10:   [...artistsList]
+        .filter(a => a.seen)
+        .sort((a, b) => b.shows_count - a.shows_count)
+        .slice(0, 10),
+    };
+
+    db.prepare(
+      `INSERT OR REPLACE INTO coverage_cache (key, value, updated_at) VALUES ('data', ?, datetime('now'))`
+    ).run(JSON.stringify(coverageData));
 
     db.prepare(`
       UPDATE sync_log SET finished_at = datetime('now'),
@@ -103,7 +173,7 @@ export async function runSync({ setlistKey, setlistUser, tmKey, log = console.lo
       WHERE id = ?
     `).run(unseen.length, eventsFound, newEvents, syncId);
 
-    log(`Sync complete — ${eventsFound} upcoming events, ${newEvents} new`);
+    log(`Sync complete — ${eventsFound} upcoming events (${newEvents} new), ${seenRanks.size}/${topArtists.length} top-500 seen`);
   } finally {
     running = false;
   }

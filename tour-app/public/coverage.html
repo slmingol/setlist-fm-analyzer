@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coverage · setlist.fm</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<style>
+:root{
+  --bg:#0d0d1a;--surface:#14142b;--surface2:#1c1c38;
+  --border:#2a2a50;--text:#e2e2f0;--muted:#7070a0;
+  --accent:#7c4dff;--accent2:#00e5ff;--seen:#00c853;--unseen:#455a64;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;margin:0}
+a{color:var(--accent2);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Nav */
+.app-nav{background:#0a0a18;border-bottom:1px solid var(--border);padding:.5rem 0}
+.app-nav .inner{max-width:1200px;margin:0 auto;padding:0 1.25rem;display:flex;align-items:center;gap:1.5rem}
+.nav-brand{font-weight:800;font-size:.9rem;color:var(--muted);letter-spacing:.04em}
+.nav-link{font-size:.82rem;font-weight:600;color:var(--muted);padding:.25rem .5rem;border-radius:4px;transition:color .15s}
+.nav-link:hover{color:var(--text);text-decoration:none}
+.nav-link.active{color:var(--text);background:rgba(124,77,255,.15)}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,#1a0040 0%,#0a0a1f 60%,#001830 100%);padding:1.1rem 0 1rem;border-bottom:1px solid var(--border)}
+.hero h1{font-size:1.4rem;font-weight:800;margin:0 0 .1rem}
+.hero .sub{color:var(--muted);font-size:.82rem}
+
+/* Stat bar */
+.stat-bar{display:flex;flex-wrap:wrap;gap:.5rem}
+.stat-card{flex:1 1 0;min-width:100px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem .85rem;text-align:center}
+.stat-value{font-size:1.7rem;font-weight:800;line-height:1.1;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-denom{font-size:.85rem;font-weight:400;opacity:.5}
+.stat-label{color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;margin-top:.2rem}
+.stat-divider{width:1px;background:var(--border);margin:.25rem 0;align-self:stretch}
+.stat-card-living{border-color:rgba(0,200,83,.25)}
+.stat-card-deceased{border-color:rgba(229,115,115,.25)}
+
+/* Cards */
+.card-dark{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem}
+.card-dark h5{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;margin-bottom:1rem}
+
+/* Genre dot */
+.genre-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:.3rem}
+
+/* Badges */
+.badge-seen{background:var(--seen);color:#000;font-weight:700;font-size:.72rem;padding:.2em .5em;border-radius:4px}
+.badge-unseen{background:var(--unseen);color:#ccc;font-size:.72rem;padding:.2em .5em;border-radius:4px}
+
+/* DataTable overrides */
+table.dataTable{color:var(--text)!important}
+table.dataTable thead th{background:#0d0d22!important;color:var(--muted)!important;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)!important}
+table.dataTable tbody tr{border-bottom:1px solid #1c1c30}
+table.dataTable tbody tr:hover td{background:rgba(124,77,255,.07)!important}
+.row-seen td{background:rgba(0,200,83,.03)!important}
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_length select{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:.25rem .5rem}
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate{color:var(--muted)}
+.page-link{background:var(--surface2)!important;border-color:var(--border)!important;color:var(--text)!important}
+.page-item.active .page-link{background:var(--accent)!important;border-color:var(--accent)!important}
+.rank-col{width:60px;color:var(--muted);font-size:.85rem}
+.src-col{font-size:.75rem;color:var(--muted)}
+.deceased-tag{color:#e57373;font-size:.85em;margin-left:.2rem;cursor:default}
+
+/* Filter buttons */
+.filter-bar{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem}
+.fbtn{padding:.28rem .8rem;border-radius:20px;font-size:.78rem;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+.fbtn.active,.fbtn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.fbtn-active.active,.fbtn-active:hover{background:#1b5e20;border-color:#1b5e20;color:#fff}
+.fbtn-hiatus.active,.fbtn-hiatus:hover{background:#4a3800;border-color:#f9a825;color:#f9a825}
+.fbtn-disbanded.active,.fbtn-disbanded:hover{background:#1a237e;border-color:#5c6bc0;color:#aab}
+.fbtn-deceased{border-color:#5a4040}
+.fbtn-deceased.active,.fbtn-deceased:hover{background:#7a2020;border-color:#7a2020}
+.fbtn-divider{width:1px;background:var(--border);margin:0 .25rem;align-self:stretch}
+
+/* Genre toggle bar */
+.genre-filter-bar{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;padding:.55rem .7rem;margin-bottom:.75rem;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px}
+.genre-filter-label{font-size:.72rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-right:.25rem;white-space:nowrap}
+.genre-toggle{display:inline-flex;align-items:center;gap:.3rem;padding:.28rem .8rem;border-radius:20px;font-size:.78rem;cursor:pointer;border:1px solid color-mix(in srgb,var(--gcol) 55%,transparent);background:color-mix(in srgb,var(--gcol) 18%,transparent);color:var(--gcol);transition:all .15s}
+.genre-toggle:hover{background:color-mix(in srgb,var(--gcol) 30%,transparent)}
+.genre-toggle.excluded{opacity:.3;text-decoration:line-through;background:transparent;border-color:var(--border);color:var(--muted)}
+.gtog-count{font-size:.72em;opacity:.7}
+.genre-reset{margin-left:.35rem;border-style:dashed}
+
+/* Dials */
+.dial-row{display:flex;justify-content:space-around;align-items:flex-start;flex-wrap:wrap;gap:1.5rem;padding:1rem 0}
+.dial-wrap{text-align:center}
+.dial-label{font-size:.72rem;color:var(--muted);margin-top:.4rem;line-height:1.3}
+.dial-label-lg{font-size:.82rem;margin-top:.6rem}
+.dial-sub{font-size:.68rem;opacity:.7}
+.dial-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.05rem;font-weight:600;color:var(--text);pointer-events:none;white-space:nowrap}
+
+/* Mini table */
+.mini-table td,.mini-table th{padding:.4rem .6rem;font-size:.82rem;border-color:var(--border)!important;color:var(--text)}
+.mini-table tr:hover td{background:rgba(124,77,255,.07)}
+
+section{padding:2rem 0}
+section>h2{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:1rem}
+footer{padding:1.5rem 0;color:var(--muted);font-size:.78rem;border-top:1px solid var(--border)}
+.empty{text-align:center;padding:4rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<nav class="app-nav">
+  <div class="inner">
+    <span class="nav-brand">setlist.fm</span>
+    <a href="/coverage.html" class="nav-link active">Coverage</a>
+    <a href="/" class="nav-link">Tour Planner</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="container">
+    <h1>setlist.fm Analyzer</h1>
+    <p class="sub" id="heroSub">Top 500 Musical Acts</p>
+  </div>
+</div>
+
+<div class="container py-3" id="main">
+  <p class="empty" id="loadMsg">Loading coverage data…</p>
+</div>
+
+<footer>
+  <div class="container">
+    Data from <a href="https://www.setlist.fm/">setlist.fm</a> &nbsp;·&nbsp;
+    Rankings aggregated from Rolling Stone, Rock &amp; Roll Hall of Fame, VH1, Grammy Lifetime Achievement Award, and Billboard historical charts.
+  </div>
+</footer>
+
+<script>
+const GENRE_COLORS = {
+  'Rock':'#E91E63','Classic Rock':'#BA68C8','Blues Rock':'#7E57C2','Blues':'#3F51B5',
+  'Jazz':'#29B6F6','R&B/Soul':'#FF9800','Funk':'#AB47BC','Hip-Hop':'#FF5722',
+  'Country':'#8D6E63','Pop':'#00BCD4','Punk':'#F44336','Heavy Metal':'#546E7A',
+  'Alternative':'#66BB6A','Indie':'#26A69A','Electronic':'#00E5FF','Folk':'#A1887F',
+  'Reggae':'#4CAF50','Gospel':'#FFA726','Glam Rock':'#EC407A','Shoegaze':'#80DEEA',
+  'Ska':'#FFEE58','Riot Grrrl':'#EF5350','Jam':'#9CCC65','Other':'#9E9E9E',
+};
+const gc = g => GENRE_COLORS[g] ?? '#9E9E9E';
+const pct = (n, d) => d ? (n / d * 100).toFixed(1) : '0.0';
+
+Chart.defaults.color = '#7070a0';
+Chart.defaults.borderColor = '#2a2a50';
+
+let dt, excludedGenres = new Set(), seenFilter = 'all', statusFilter = 'all';
+
+async function init() {
+  let data;
+  try {
+    const r = await fetch('/api/coverage');
+    if (!r.ok) {
+      document.getElementById('loadMsg').textContent = 'No coverage data yet — run a sync from the Tour Planner first.';
+      return;
+    }
+    data = await r.json();
+  } catch (e) {
+    document.getElementById('loadMsg').textContent = 'Failed to load coverage data.';
+    return;
+  }
+
+  const { stats: s, by_genre, by_era, artists, top10, updated_at } = data;
+  const when = updated_at ? new Date(updated_at).toLocaleDateString('en-US', {month:'long',day:'numeric',year:'numeric'}) : '';
+  document.getElementById('heroSub').textContent = `Top 500 Musical Acts · ${when}`;
+
+  document.getElementById('main').innerHTML = buildHTML(s, by_genre, by_era, artists, top10);
+
+  // Dials
+  makeDial('dialAll',       s.seen_count,     s.total,           '#00c853');
+  makeDial('dialLiving',    s.living_seen,    s.living_count,    '#42a5f5');
+  makeDial('dialReachable', s.reachable_seen, s.reachable_count, '#ff9800');
+  makeDial('dialActive',    s.active_seen,    s.active_count,    '#ab47bc');
+
+  // Genre chart (horizontal bars)
+  new Chart(document.getElementById('genreChart'), {
+    type: 'bar',
+    data: {
+      labels: by_genre.map(g => g.genre),
+      datasets: [
+        { label: 'Seen',     data: by_genre.map(g => g.seen),           backgroundColor: by_genre.map(g => gc(g.genre) + 'cc'), borderRadius: 3 },
+        { label: 'Not Seen', data: by_genre.map(g => g.total - g.seen), backgroundColor: '#2a2a50', borderRadius: 3 },
+      ],
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: { x: { stacked: true, grid: { color: '#1c1c30' } }, y: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } } },
+    },
+  });
+
+  // Era chart (vertical bars)
+  new Chart(document.getElementById('eraChart'), {
+    type: 'bar',
+    data: {
+      labels: by_era.map(e => e.era),
+      datasets: [
+        { label: 'Seen',     data: by_era.map(e => e.seen),           backgroundColor: '#7c4dffcc', borderRadius: 3 },
+        { label: 'Not Seen', data: by_era.map(e => e.total - e.seen), backgroundColor: '#2a2a50',   borderRadius: 3 },
+      ],
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: '#1c1c30' } } },
+    },
+  });
+
+  // Seen artists DataTable
+  $('#seenTable').DataTable({
+    pageLength: 25, lengthMenu: [10,25,50,100,200],
+    order: [[0,'asc']],
+    language: { search: '', searchPlaceholder: 'Search…' },
+  });
+
+  // Genre toggles custom search for main table
+  $.fn.dataTable.ext.search.push((_s, row) => {
+    if (seenFilter   === 'seen'      && row[6] !== '1') return false;
+    if (seenFilter   === 'unseen'    && row[6] !== '0') return false;
+    if (statusFilter === 'living'    && row[7] !== '0') return false;
+    if (statusFilter === 'deceased'  && row[7] !== '1') return false;
+    if (statusFilter === 'active'    && row[9] !== 'active')    return false;
+    if (statusFilter === 'hiatus'    && row[9] !== 'hiatus')    return false;
+    if (statusFilter === 'disbanded' && row[9] !== 'disbanded') return false;
+    if (excludedGenres.size && excludedGenres.has(row[8])) return false;
+    return true;
+  });
+
+  dt = $('#artistTable').DataTable({
+    pageLength: 25, lengthMenu: [10,25,50,100,200],
+    order: [[0,'asc']],
+    language: { search: '', searchPlaceholder: 'Search artists…' },
+    columnDefs: [{ visible: false, targets: [6,7,8,9] }],
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'ArrowRight') dt.page('next').draw('page');
+    if (e.key === 'ArrowLeft')  dt.page('previous').draw('page');
+  });
+}
+
+function makeDial(id, seen, total, color) {
+  new Chart(document.getElementById(id), {
+    type: 'doughnut',
+    data: { labels: ['Seen','Not Seen'], datasets: [{ data: [seen, total - seen], backgroundColor: [color,'#2a2a50'], borderWidth: 0 }] },
+    options: {
+      cutout: '72%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.raw} (${(ctx.raw/total*100).toFixed(1)}%)` } },
+      },
+    },
+  });
+}
+
+function buildHTML(s, by_genre, by_era, artists, top10) {
+  const deceasedUnseen = s.deceased_count - s.deceased_seen;
+  const livingUnseen   = s.living_count   - s.living_seen;
+
+  // Stat bar
+  const statBar = `
+    <div class="stat-bar">
+      <div class="stat-card"><div class="stat-value">${s.seen_count}</div><div class="stat-label">Top 500 Seen</div></div>
+      <div class="stat-card"><div class="stat-value">${pct(s.seen_count,s.total)}%</div><div class="stat-label">Coverage</div></div>
+      <div class="stat-card"><div class="stat-value">${s.unique_artists}</div><div class="stat-label">Unique Artists</div></div>
+      <div class="stat-card"><div class="stat-value">${s.total_shows}</div><div class="stat-label">Shows Attended</div></div>
+      <div class="stat-divider"></div>
+      <div class="stat-card stat-card-living"><div class="stat-value">${s.living_seen}<span class="stat-denom">/${s.living_count}</span></div><div class="stat-label">Living Seen · ${pct(s.living_seen,s.living_count)}%</div></div>
+      <div class="stat-card stat-card-living"><div class="stat-value">${livingUnseen}<span class="stat-denom">/${s.living_count}</span></div><div class="stat-label">Living Not Seen · ${pct(livingUnseen,s.living_count)}%</div></div>
+      <div class="stat-card stat-card-deceased"><div class="stat-value">${s.deceased_seen}<span class="stat-denom">/${s.deceased_count}</span></div><div class="stat-label">Deceased Seen · ${pct(s.deceased_seen,s.deceased_count)}%</div></div>
+      <div class="stat-card stat-card-deceased"><div class="stat-value">${deceasedUnseen}<span class="stat-denom">/${s.deceased_count}</span></div><div class="stat-label">Deceased Not Seen · ${pct(deceasedUnseen,s.deceased_count)}%</div></div>
+    </div>`;
+
+  // Dials
+  const dials = `
+    <div class="card-dark">
+      <div class="dial-row">
+        ${[
+          ['dialAll',       pct(s.seen_count,s.total),      'All 500',             s.seen_count,     s.total],
+          ['dialLiving',    pct(s.living_seen,s.living_count), 'Living',            s.living_seen,    s.living_count],
+          ['dialReachable', pct(s.reachable_seen,s.reachable_count), 'Touring + Off-Tour', s.reachable_seen, s.reachable_count],
+          ['dialActive',    pct(s.active_seen,s.active_count), 'Touring Only',      s.active_seen,    s.active_count],
+        ].map(([id,p,label,seen,total]) => `
+          <div class="dial-wrap">
+            <div style="position:relative;width:140px;height:140px;margin:auto">
+              <canvas id="${id}"></canvas>
+              <div class="dial-center">${p}%</div>
+            </div>
+            <div class="dial-label dial-label-lg">${label}<br><span class="dial-sub">${seen} of ${total}</span></div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  // Genre toggle buttons
+  const genreToggles = by_genre.map(g => `
+    <button class="genre-toggle" style="--gcol:${gc(g.genre)}" data-genre="${g.genre}" onclick="toggleGenre(this,'${g.genre.replace(/'/g,"\\'")}')">
+      <span class="genre-dot" style="background:${gc(g.genre)}"></span>${g.genre} <span class="gtog-count">(${g.total})</span>
+    </button>`).join('');
+
+  // All-500 table rows
+  const allRows = artists.map(a => {
+    const dead    = a.deceased ? ' <span class="deceased-tag" title="Deceased">†</span>' : '';
+    const badge   = a.seen
+      ? `<span class="badge-seen">Seen (${a.shows_count}x)</span>`
+      : `<span class="badge-unseen">Not Seen</span>`;
+    const rowCls  = a.seen ? 'row-seen' : 'row-unseen';
+    const sortKey = a.seen ? `1_${(9999 - a.shows_count).toString().padStart(4,'0')}` : '0';
+    return `<tr class="${rowCls}">
+      <td class="rank-col">${a.rank}</td>
+      <td class="name-col"><strong>${a.name}</strong>${dead}</td>
+      <td><span class="genre-dot" style="background:${gc(a.genre)}"></span>${a.genre}</td>
+      <td>${a.era}</td>
+      <td class="src-col">${a.sources}</td>
+      <td data-sort="${sortKey}">${badge}</td>
+      <td>${a.seen ? '1' : '0'}</td>
+      <td>${a.deceased ? '1' : '0'}</td>
+      <td>${a.genre}</td>
+      <td>${a.touring_status}</td>
+    </tr>`;
+  }).join('');
+
+  // Seen artists table rows (sorted by rank)
+  const seenRows = [...artists].filter(a => a.seen).sort((a,b) => a.rank - b.rank).map(a => {
+    const dead = a.deceased ? ' <span class="deceased-tag" title="Deceased">†</span>' : '';
+    return `<tr>
+      <td class="rank-col">#${a.rank}</td>
+      <td><strong>${a.name}</strong>${dead}</td>
+      <td><span class="genre-dot" style="background:${gc(a.genre)}"></span>${a.genre}</td>
+      <td>${a.era}</td>
+      <td>${a.shows_count}</td>
+    </tr>`;
+  }).join('');
+
+  // Top-10 rows
+  const top10Rows = top10.map(a => `<tr><td>#${a.rank}</td><td>${a.name}</td><td>${a.shows_count}</td></tr>`).join('');
+
+  return `
+    <section><div class="stat-bar">${statBar}</div></section>
+
+    <section>
+      <h2>Coverage by Status</h2>
+      ${dials}
+    </section>
+
+    <section>
+      <h2>Breakdown</h2>
+      <div class="row g-3">
+        <div class="col-md-5">
+          <div class="card-dark h-100"><h5>By Genre</h5><canvas id="genreChart" style="max-height:420px"></canvas></div>
+        </div>
+        <div class="col-md-7">
+          <div class="card-dark h-100"><h5>By Era</h5><canvas id="eraChart" style="max-height:420px"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Artists You've Seen</h2>
+      <div class="row g-3">
+        <div class="col-md-3">
+          <div class="card-dark h-100">
+            <h5>Most Seen (from Top 500)</h5>
+            <table class="table table-dark table-sm table-hover mini-table mb-0">
+              <thead><tr><th>Rank</th><th>Artist</th><th>Shows</th></tr></thead>
+              <tbody>${top10Rows}</tbody>
+            </table>
+          </div>
+        </div>
+        <div class="col-md-9">
+          <div class="card-dark">
+            <table id="seenTable" class="table table-dark table-sm table-hover mini-table mb-0" style="width:100%">
+              <thead><tr><th>Rank</th><th>Artist</th><th>Genre</th><th>Era</th><th>Shows</th></tr></thead>
+              <tbody>${seenRows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>All 500 Artists</h2>
+      <div class="filter-bar">
+        <button class="fbtn active"         data-g="seen"   onclick="applySeenFilter(this,'all')">All (${s.total})</button>
+        <button class="fbtn"                data-g="seen"   onclick="applySeenFilter(this,'seen')">Seen (${s.seen_count})</button>
+        <button class="fbtn"                data-g="seen"   onclick="applySeenFilter(this,'unseen')">Not Seen (${s.total - s.seen_count})</button>
+        <span class="fbtn-divider"></span>
+        <button class="fbtn"                data-g="status" onclick="applyStatusFilter(this,'all')">Any Status</button>
+        <button class="fbtn"                data-g="status" onclick="applyStatusFilter(this,'living')">Living (${s.living_count})</button>
+        <button class="fbtn fbtn-active"    data-g="status" onclick="applyStatusFilter(this,'active')">Touring (${s.active_count})</button>
+        <button class="fbtn fbtn-hiatus"    data-g="status" onclick="applyStatusFilter(this,'hiatus')">Off-Tour (${s.hiatus_count})</button>
+        <button class="fbtn fbtn-disbanded" data-g="status" onclick="applyStatusFilter(this,'disbanded')">Disbanded (${s.disbanded_count})</button>
+        <button class="fbtn fbtn-deceased"  data-g="status" onclick="applyStatusFilter(this,'deceased')">Deceased (${s.deceased_count})</button>
+      </div>
+      <div class="genre-filter-bar">
+        <span class="genre-filter-label">Genres</span>
+        ${genreToggles}
+        <button class="fbtn genre-reset" onclick="clearGenres()">Clear All</button>
+        <button class="fbtn genre-reset" onclick="resetGenres()">Reset All</button>
+      </div>
+      <div class="card-dark">
+        <table id="artistTable" class="table table-dark table-sm" style="width:100%">
+          <thead><tr>
+            <th>Rank</th><th>Artist</th><th>Genre</th><th>Era</th><th>Sources</th><th>Status</th>
+            <th>_seen</th><th>_deceased</th><th>_genre</th><th>_touring</th>
+          </tr></thead>
+          <tbody>${allRows}</tbody>
+        </table>
+      </div>
+    </section>`;
+}
+
+function applySeenFilter(btn, f) {
+  seenFilter = f;
+  document.querySelectorAll('.fbtn[data-g="seen"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  dt.draw();
+}
+
+function applyStatusFilter(btn, f) {
+  statusFilter = f;
+  document.querySelectorAll('.fbtn[data-g="status"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  dt.draw();
+}
+
+function toggleGenre(btn, genre) {
+  if (excludedGenres.has(genre)) { excludedGenres.delete(genre); btn.classList.remove('excluded'); }
+  else                           { excludedGenres.add(genre);    btn.classList.add('excluded'); }
+  dt.draw();
+}
+
+function clearGenres() {
+  document.querySelectorAll('.genre-toggle').forEach(b => { excludedGenres.add(b.dataset.genre); b.classList.add('excluded'); });
+  dt.draw();
+}
+
+function resetGenres() {
+  excludedGenres.clear();
+  document.querySelectorAll('.genre-toggle').forEach(b => b.classList.remove('excluded'));
+  dt.draw();
+}
+
+init();
+</script>
+</body>
+</html>

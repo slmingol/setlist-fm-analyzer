@@ -64,6 +64,14 @@ app.get('/api/artists', (_req, res) => {
   res.json(Object.values(byArtist).sort((a, b) => a.rank - b.rank));
 });
 
+// Coverage analyzer
+app.get('/api/coverage', (_req, res) => {
+  const row = db.prepare(`SELECT value, updated_at FROM coverage_cache WHERE key = 'data'`).get();
+  if (!row) return res.status(404).json({ error: 'No coverage data yet — run a sync first' });
+  res.setHeader('Content-Type', 'application/json');
+  res.send(row.value);
+});
+
 // Blacklist
 app.get('/api/blacklist', (_req, res) => {
   res.json(db.prepare(`SELECT artist_rank AS rank, artist_name AS name, added_at FROM blacklist ORDER BY artist_name`).all());

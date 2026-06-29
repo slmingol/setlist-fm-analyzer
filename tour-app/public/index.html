@@ -69,6 +69,14 @@
   .syncing{color:var(--orange);animation:pulse 1.5s infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
+  /* Nav */
+  .app-nav{background:#0a0a18;border-bottom:1px solid var(--border);padding:.5rem 0}
+  .app-nav .container{display:flex;align-items:center;gap:1.5rem}
+  .nav-brand{font-weight:800;font-size:.9rem;color:var(--muted);letter-spacing:.04em}
+  .nav-link{font-size:.82rem;font-weight:600;color:var(--muted);padding:.25rem .5rem;border-radius:4px;transition:color .15s}
+  .nav-link:hover{color:var(--text);text-decoration:none}
+  .nav-link.active{color:var(--text);background:rgba(124,77,255,.15)}
+
   /* Settings drawer */
   .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100}
   .drawer-overlay.open{display:block}
@@ -94,6 +102,14 @@
 </style>
 </head>
 <body>
+
+<nav class="app-nav">
+  <div class="container">
+    <span class="nav-brand">setlist.fm</span>
+    <a href="/coverage.html" class="nav-link">Coverage</a>
+    <a href="/" class="nav-link active">Tour Planner</a>
+  </div>
+</nav>
 
 <div class="hero">
   <div class="container">
