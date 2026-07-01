@@ -732,7 +732,8 @@
       "VH1"
     ],
     "aliases": [
-      "BB King"
+      "BB King",
+      "B. B. King"
     ],
     "deceased": true,
     "touring_status": "deceased"
@@ -7980,5 +7981,619 @@
       "Ringo Starr and His All Starr Band"
     ],
     "touring_status": "hiatus"
+  },
+  {
+    "rank": 502,
+    "name": "Eddie Cochran",
+    "genre": [
+      "Rock & Roll"
+    ],
+    "era": "1950s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 503,
+    "name": "Clyde McPhatter",
+    "genre": [
+      "R&B",
+      "Soul"
+    ],
+    "era": "1950s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 504,
+    "name": "Dion",
+    "genre": [
+      "Rock & Roll",
+      "Pop"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Dion DiMucci",
+      "Dion and the Belmonts"
+    ],
+    "deceased": false,
+    "touring_status": "hiatus"
+  },
+  {
+    "rank": 505,
+    "name": "Duane Eddy",
+    "genre": [
+      "Rock & Roll"
+    ],
+    "era": "1950s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 506,
+    "name": "Frank Zappa",
+    "genre": [
+      "Rock",
+      "Experimental"
+    ],
+    "era": "1970s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "The Mothers of Invention",
+      "Zappa"
+    ],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 507,
+    "name": "Little Willie John",
+    "genre": [
+      "R&B"
+    ],
+    "era": "1950s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 508,
+    "name": "The Shirelles",
+    "genre": [
+      "R&B",
+      "Pop"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Shirelles"
+    ],
+    "deceased": false,
+    "touring_status": "disbanded"
+  },
+  {
+    "rank": 509,
+    "name": "Del Shannon",
+    "genre": [
+      "Rock",
+      "Pop"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 510,
+    "name": "The Staple Singers",
+    "genre": [
+      "Soul",
+      "Gospel"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Staple Singers",
+      "The Staples"
+    ],
+    "deceased": false,
+    "touring_status": "disbanded"
+  },
+  {
+    "rank": 511,
+    "name": "The Lovin' Spoonful",
+    "genre": [
+      "Rock",
+      "Folk"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Lovin Spoonful"
+    ],
+    "deceased": false,
+    "touring_status": "disbanded"
+  },
+  {
+    "rank": 512,
+    "name": "The Flamingos",
+    "genre": [
+      "R&B",
+      "Doo-wop"
+    ],
+    "era": "1950s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Flamingos"
+    ],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 513,
+    "name": "Ritchie Valens",
+    "genre": [
+      "Rock & Roll"
+    ],
+    "era": "1950s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 514,
+    "name": "Gene Pitney",
+    "genre": [
+      "Pop"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 515,
+    "name": "The Righteous Brothers",
+    "genre": [
+      "R&B",
+      "Pop"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Righteous Brothers"
+    ],
+    "deceased": false,
+    "touring_status": "hiatus"
+  },
+  {
+    "rank": 516,
+    "name": "The Dells",
+    "genre": [
+      "R&B",
+      "Soul"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Dells"
+    ],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 517,
+    "name": "The Ventures",
+    "genre": [
+      "Rock",
+      "Instrumental"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Ventures"
+    ],
+    "deceased": false,
+    "touring_status": "hiatus"
+  },
+  {
+    "rank": 518,
+    "name": "Jeff Beck",
+    "genre": [
+      "Rock",
+      "Blues"
+    ],
+    "era": "1970s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 519,
+    "name": "Jimmy Cliff",
+    "genre": [
+      "Reggae"
+    ],
+    "era": "1970s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": false,
+    "touring_status": "hiatus"
+  },
+  {
+    "rank": 520,
+    "name": "The Blue Caps",
+    "genre": [
+      "Rock & Roll"
+    ],
+    "era": "1950s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Gene Vincent and His Blue Caps"
+    ],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 521,
+    "name": "The Comets",
+    "genre": [
+      "Rock & Roll"
+    ],
+    "era": "1950s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Bill Haley and His Comets"
+    ],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 522,
+    "name": "The Crickets",
+    "genre": [
+      "Rock & Roll"
+    ],
+    "era": "1950s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Buddy Holly and the Crickets"
+    ],
+    "deceased": false,
+    "touring_status": "disbanded"
+  },
+  {
+    "rank": 523,
+    "name": "Donovan",
+    "genre": [
+      "Folk",
+      "Rock"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": false,
+    "touring_status": "hiatus"
+  },
+  {
+    "rank": 524,
+    "name": "The Famous Flames",
+    "genre": [
+      "R&B",
+      "Soul"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "James Brown and His Famous Flames"
+    ],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 525,
+    "name": "The Midnighters",
+    "genre": [
+      "R&B"
+    ],
+    "era": "1950s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Hank Ballard and the Midnighters"
+    ],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 526,
+    "name": "The Miracles",
+    "genre": [
+      "R&B",
+      "Soul"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Smokey Robinson and the Miracles",
+      "Miracles"
+    ],
+    "deceased": false,
+    "touring_status": "disbanded"
+  },
+  {
+    "rank": 527,
+    "name": "Laura Nyro",
+    "genre": [
+      "Folk",
+      "Soul",
+      "Pop"
+    ],
+    "era": "1970s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 528,
+    "name": "Albert King",
+    "genre": [
+      "Blues"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 529,
+    "name": "Randy Newman",
+    "genre": [
+      "Pop",
+      "Rock"
+    ],
+    "era": "1970s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": false,
+    "touring_status": "hiatus"
+  },
+  {
+    "rank": 530,
+    "name": "The Paul Butterfield Blues Band",
+    "genre": [
+      "Blues",
+      "Rock"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Paul Butterfield Blues Band"
+    ],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 531,
+    "name": "Bill Withers",
+    "genre": [
+      "Soul",
+      "R&B"
+    ],
+    "era": "1970s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 532,
+    "name": "The Zombies",
+    "genre": [
+      "Rock",
+      "Pop"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Zombies"
+    ],
+    "deceased": false,
+    "touring_status": "active"
+  },
+  {
+    "rank": 533,
+    "name": "Duran Duran",
+    "genre": [
+      "Pop",
+      "New Wave"
+    ],
+    "era": "1980s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": false,
+    "touring_status": "active"
+  },
+  {
+    "rank": 534,
+    "name": "Peter Frampton",
+    "genre": [
+      "Rock"
+    ],
+    "era": "1970s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": false,
+    "touring_status": "hiatus"
+  },
+  {
+    "rank": 535,
+    "name": "Kool & the Gang",
+    "genre": [
+      "Funk",
+      "R&B"
+    ],
+    "era": "1980s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [
+      "Kool and the Gang"
+    ],
+    "deceased": false,
+    "touring_status": "active"
+  },
+  {
+    "rank": 536,
+    "name": "Chubby Checker",
+    "genre": [
+      "Rock & Roll",
+      "R&B"
+    ],
+    "era": "1960s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": false,
+    "touring_status": "hiatus"
+  },
+  {
+    "rank": 537,
+    "name": "Joe Cocker",
+    "genre": [
+      "Rock",
+      "Soul"
+    ],
+    "era": "1970s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": true,
+    "touring_status": "deceased"
+  },
+  {
+    "rank": 538,
+    "name": "Phil Collins",
+    "genre": [
+      "Pop",
+      "Rock"
+    ],
+    "era": "1980s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": false,
+    "touring_status": "hiatus"
+  },
+  {
+    "rank": 539,
+    "name": "Sade",
+    "genre": [
+      "Pop",
+      "Soul"
+    ],
+    "era": "1980s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": false,
+    "touring_status": "hiatus"
+  },
+  {
+    "rank": 540,
+    "name": "Luther Vandross",
+    "genre": [
+      "R&B",
+      "Soul"
+    ],
+    "era": "1980s",
+    "sources": [
+      "RRHOF"
+    ],
+    "aliases": [],
+    "deceased": true,
+    "touring_status": "deceased"
   }
 ]
