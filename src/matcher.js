@@ -1,3 +1,10 @@
+const TRIBUTE_RE = /\btribute\b|\bcover\s*band\b|\bcelebrating\b|\bthe music of\b|\bsalute to\b/i;
+
+/** Returns true if the name looks like a tribute/cover act rather than the real artist. */
+export function isTribute(name) {
+  return TRIBUTE_RE.test(name);
+}
+
 /** Normalize an artist name for fuzzy matching (mirrors analyze.py logic). */
 export function normalize(name) {
   return name
@@ -16,10 +23,10 @@ export function buildSeenSet(shows) {
   const seen = new Set();
   for (const show of shows) {
     const name = show?.artist?.name;
-    if (name) seen.add(normalize(name));
+    if (name && !isTribute(name)) seen.add(normalize(name));
     // also check aliases attached to artist object
     for (const alias of (show?.artist?.aliases ?? [])) {
-      seen.add(normalize(alias));
+      if (!isTribute(alias)) seen.add(normalize(alias));
     }
   }
   return seen;
