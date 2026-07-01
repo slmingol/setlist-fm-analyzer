@@ -49,6 +49,7 @@ a:hover{text-decoration:underline}
 .stat-divider{width:1px;background:var(--border);margin:.25rem 0;align-self:stretch}
 .stat-card-living{border-color:rgba(0,200,83,.25)}
 .stat-card-deceased{border-color:rgba(229,115,115,.25)}
+.stat-card[onclick]:hover{border-color:var(--accent);background:var(--surface2);transition:border-color .15s,background .15s}
 
 /* Cards */
 .card-dark{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem}
@@ -374,17 +375,19 @@ function buildHTML(s, by_genre, by_era, artists, top10) {
   const livingUnseen   = s.living_count   - s.living_seen;
 
   // Stat bar
+  const sc = (seen, status, cls='') =>
+    `onclick="applyStatFilter('${seen}','${status}')" style="cursor:pointer" title="Click to filter table"`;
   const statBar = `
     <div class="stat-bar">
-      <div class="stat-card"><div class="stat-value">${s.seen_count}</div><div class="stat-label">Top 500 Seen</div></div>
-      <div class="stat-card"><div class="stat-value">${pct(s.seen_count,s.total)}%</div><div class="stat-label">Coverage</div></div>
-      <div class="stat-card"><div class="stat-value">${s.unique_artists}</div><div class="stat-label">Unique Artists</div></div>
-      <div class="stat-card"><div class="stat-value">${s.total_shows}</div><div class="stat-label">Shows Attended</div></div>
+      <div class="stat-card" ${sc('seen','all')}><div class="stat-value">${s.seen_count}</div><div class="stat-label">Top 500 Seen</div></div>
+      <div class="stat-card" ${sc('seen','all')}><div class="stat-value">${pct(s.seen_count,s.total)}%</div><div class="stat-label">Coverage</div></div>
+      <div class="stat-card" ${sc('seen','all')}><div class="stat-value">${s.unique_artists}</div><div class="stat-label">Unique Artists</div></div>
+      <div class="stat-card" ${sc('seen','all')}><div class="stat-value">${s.total_shows}</div><div class="stat-label">Shows Attended</div></div>
       <div class="stat-divider"></div>
-      <div class="stat-card stat-card-living"><div class="stat-value">${s.living_seen}<span class="stat-denom">/${s.living_count}</span></div><div class="stat-label">Living Seen · ${pct(s.living_seen,s.living_count)}%</div></div>
-      <div class="stat-card stat-card-living"><div class="stat-value">${livingUnseen}<span class="stat-denom">/${s.living_count}</span></div><div class="stat-label">Living Not Seen · ${pct(livingUnseen,s.living_count)}%</div></div>
-      <div class="stat-card stat-card-deceased"><div class="stat-value">${s.deceased_seen}<span class="stat-denom">/${s.deceased_count}</span></div><div class="stat-label">Deceased Seen · ${pct(s.deceased_seen,s.deceased_count)}%</div></div>
-      <div class="stat-card stat-card-deceased"><div class="stat-value">${deceasedUnseen}<span class="stat-denom">/${s.deceased_count}</span></div><div class="stat-label">Deceased Not Seen · ${pct(deceasedUnseen,s.deceased_count)}%</div></div>
+      <div class="stat-card stat-card-living" ${sc('seen','living')}><div class="stat-value">${s.living_seen}<span class="stat-denom">/${s.living_count}</span></div><div class="stat-label">Living Seen · ${pct(s.living_seen,s.living_count)}%</div></div>
+      <div class="stat-card stat-card-living" ${sc('unseen','living')}><div class="stat-value">${livingUnseen}<span class="stat-denom">/${s.living_count}</span></div><div class="stat-label">Living Not Seen · ${pct(livingUnseen,s.living_count)}%</div></div>
+      <div class="stat-card stat-card-deceased" ${sc('seen','deceased')}><div class="stat-value">${s.deceased_seen}<span class="stat-denom">/${s.deceased_count}</span></div><div class="stat-label">Deceased Seen · ${pct(s.deceased_seen,s.deceased_count)}%</div></div>
+      <div class="stat-card stat-card-deceased" ${sc('unseen','deceased')}><div class="stat-value">${deceasedUnseen}<span class="stat-denom">/${s.deceased_count}</span></div><div class="stat-label">Deceased Not Seen · ${pct(deceasedUnseen,s.deceased_count)}%</div></div>
     </div>`;
 
   // Dials
@@ -523,6 +526,18 @@ function buildHTML(s, by_genre, by_era, artists, top10) {
         </table>
       </div>
     </section>`;
+}
+
+function applyStatFilter(seen, status) {
+  seenFilter   = seen;
+  statusFilter = status;
+  document.querySelectorAll('.fbtn[data-g="seen"]').forEach(b =>
+    b.classList.toggle('active', b.dataset.filter === seenFilter));
+  document.querySelectorAll('.fbtn[data-g="status"]').forEach(b =>
+    b.classList.toggle('active', b.dataset.filter === statusFilter));
+  savePrefs();
+  dt.draw();
+  document.getElementById('artistTable').closest('.card-dark').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function applySeenFilter(btn, f) {
