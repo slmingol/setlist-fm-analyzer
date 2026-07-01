@@ -536,7 +536,7 @@ function applyStatFilter(seen, status) {
   document.querySelectorAll('.fbtn[data-g="status"]').forEach(b =>
     b.classList.toggle('active', b.dataset.filter === statusFilter));
   savePrefs();
-  dt.draw();
+  dt.order([[6, 'desc']]).draw();
   document.getElementById('artistTable').closest('.card-dark').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
