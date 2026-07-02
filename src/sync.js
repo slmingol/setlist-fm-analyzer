@@ -114,16 +114,12 @@ export async function runSync({ setlistKey, setlistUser, tmKey, log = console.lo
         if (result.changes) newEvents++;
       }
 
-      // Remove stale future events (cancelled, tribute acts stored before filter was added,
-      // or events that fell out of the TM result window).
-      if (upcoming.length > 0) {
-        const ids = upcoming.map(e => e.tm_id);
-        const ph  = ids.map(() => '?').join(',');
-        db.prepare(`DELETE FROM events WHERE artist_rank = ? AND date >= ? AND tm_id NOT IN (${ph})`)
-          .run(artist.rank, today, ...ids);
-      } else {
-        db.prepare(`DELETE FROM events WHERE artist_rank = ? AND date >= ?`).run(artist.rank, today);
-      }
+      // Purge tribute events already stored for this artist (from before the filter was added).
+      db.prepare(`DELETE FROM events WHERE artist_rank = ? AND (
+        event_name LIKE '%tribute%' OR event_name LIKE '%celebrating%' OR
+        event_name LIKE '%the music of%' OR event_name LIKE '%cover band%' OR
+        event_name LIKE '%salute to%'
+      )`).run(artist.rank);
 
       db.prepare(`DELETE FROM events WHERE artist_rank = ? AND date < ?`).run(artist.rank, today);
       await new Promise(r => setTimeout(r, 200));

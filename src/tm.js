@@ -2,7 +2,7 @@ const BASE = 'https://app.ticketmaster.com/discovery/v2';
 
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-export async function fetchEvents(artistName, apiKey, pageSize = 10) {
+export async function fetchEvents(artistName, apiKey, pageSize = 50) {
   const params = new URLSearchParams({
     apikey: apiKey,
     keyword: artistName,
