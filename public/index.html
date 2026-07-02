@@ -62,6 +62,8 @@
   .event-date{color:var(--orange);font-weight:600;white-space:nowrap}
   .event-loc{color:var(--muted)}
   .event-link{font-size:.7rem;white-space:nowrap}
+  .more-toggle{font-size:.7rem;color:var(--accent);cursor:pointer;user-select:none}
+  .more-toggle:hover{text-decoration:underline}
   .hide-btn{background:none;border:none;color:#444;cursor:pointer;font-size:.8rem;
     padding:.2rem .4rem;border-radius:3px;transition:color .1s;white-space:nowrap}
   .hide-btn:hover{color:var(--red)}
@@ -299,13 +301,16 @@ function render() {
   }
 
   const tbody = rows.map(a => {
-    const evHtml = a.events.slice(0, 5).map(e => {
+    const evHtml = a.events.map((e, i) => {
       const loc = [e.city, e.state || e.country].filter(Boolean).join(', ');
       const nb  = isNew(e.first_seen) ? '<span class="badge-new">NEW</span>' : '';
       const tkt = e.url ? `<a class="event-link" href="${e.url}" target="_blank" rel="noopener">Tickets ↗</a>` : '';
-      return `<div class="event-row"><span class="event-date">${e.date}</span><span>${nb}</span><span class="event-loc">${loc}${e.venue ? ` · ${e.venue}` : ''}</span>${tkt}</div>`;
+      const cls = i >= 5 ? ' event-extra' : '';
+      const sty = i >= 5 ? ' style="display:none"' : '';
+      return `<div class="event-row${cls}"${sty}><span class="event-date">${e.date}</span><span>${nb}</span><span class="event-loc">${loc}${e.venue ? ` · ${e.venue}` : ''}</span>${tkt}</div>`;
     }).join('');
-    const more = a.events.length > 5 ? `<div style="color:var(--muted);font-size:.7rem">+${a.events.length - 5} more</div>` : '';
+    const extra = a.events.length - 5;
+    const more = extra > 0 ? `<span class="more-toggle" onclick="toggleMore(this,${extra})">+${extra} more</span>` : '';
     return `<tr>
       <td class="rank">#${a.rank}</td>
       <td><span class="artist-name">${a.name}</span></td>
@@ -331,6 +336,13 @@ function setSort(col) {
   sortCol = col;
   saveLocalPrefs();
   render();
+}
+
+function toggleMore(btn, count) {
+  const extras = btn.closest('.dates-cell').querySelectorAll('.event-extra');
+  const expand = extras[0].style.display === 'none';
+  extras.forEach(el => el.style.display = expand ? '' : 'none');
+  btn.textContent = expand ? 'show less' : `+${count} more`;
 }
 
 async function hideArtist(btn) {
